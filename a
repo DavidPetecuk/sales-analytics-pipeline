@@ -1,0 +1,556 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "bbec5e6d",
+   "metadata": {},
+   "source": [
+    "# 1. Beispieldaten erzeugen"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "f5bb0f5a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from scipy import stats"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "4d0fd7da",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.DataFrame'>\n",
+      "<class 'pandas.Series'>\n"
+     ]
+    }
+   ],
+   "source": [
+    "df = pd.DataFrame({\n",
+    "    \"aktie_a\": [0.02, 0.01, -0.01, 0.03],\n",
+    "    \"aktie_b\": [0.01, -0.02, 0.02, 0.04],\n",
+    "    \"aktie_c\": [0.05, -0.02, 0.02, 0.04]\n",
+    "})\n",
+    "print(type(df))\n",
+    "print(type(df[\"aktie_a\"]))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "34892ed4",
+   "metadata": {},
+   "source": [
+    "# 2. \"pandas.Series\" UND \"pandas.Dataframe\" INS \"numpy.ndarray\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "fede800a",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Objektyp <class 'numpy.ndarray'>\n",
+      "Objektyp <class 'numpy.ndarray'>\n",
+      "1-D-Array:\n",
+      " [ 0.02  0.01 -0.01  0.03]\n",
+      "----\n",
+      "2-D-Array:\n",
+      " [[ 0.02  0.01  0.05]\n",
+      " [ 0.01 -0.02 -0.02]\n",
+      " [-0.01  0.02  0.02]\n",
+      " [ 0.03  0.04  0.04]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "werte = df[\"aktie_a\"].to_numpy()\n",
+    "renditen = df[[\"aktie_a\", \"aktie_b\", \"aktie_c\"]].to_numpy()\n",
+    "print(\"Objektyp\",type(werte))\n",
+    "print(\"Objektyp\",type(renditen))\n",
+    "print(\"1-D-Array:\\n\", werte)\n",
+    "print(\"----\")\n",
+    "print(\"2-D-Array:\\n\", renditen)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3d94974d",
+   "metadata": {},
+   "source": [
+    "# 3. NumPy-Kovarianzmatrix aus einem pandas.DataFrame und/oder numpy.2array"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c4fc6add",
+   "metadata": {},
+   "source": [
+    "- np.cov() betrachtet standardmäßig jede Zeile als Variable. Bei deinem DataFrame (bzw. in daraus erzeugte np matrix (numpy.2array)s. oben) befinden sich die Variablen in den Spalten."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "de2dae9c",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[[0.00029167 0.000125   0.000225  ]\n",
+      " [0.000125   0.000625   0.00059167]\n",
+      " [0.000225   0.00059167 0.00095833]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "kovarianzmatrix = np.cov(renditen, rowvar=False, ddof=1)\n",
+    "# ddof=1 bedeutet: Wir verwenden die Stichprobenkovarianz, nicht die Populationskovarianz.\n",
+    "print(kovarianzmatrix)\n",
+    "# rowvar=False bedeutet: Die Variablen beziehungsweise Aktien stehen in den Spalten. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3f48c8a5",
+   "metadata": {},
+   "source": [
+    "- Einfacher mit pandas: Für einen normalen DataFrame ist häufig diese Variante verständlicher:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "c0368be8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "kovarianzmatrix = df[\n",
+    "    [\"aktie_a\", \"aktie_b\", \"aktie_c\"]\n",
+    "].cov()\n",
+    "#Vorteil: Das Ergebnis ist wieder ein DataFrame mit Beschriftungen:\n",
+    "# Für Matrixrechnungen und Optimierung: kovarianz_array = kovarianz_df.to_numpy()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6cb6e731",
+   "metadata": {},
+   "source": [
+    "# 4. NumPy-Ergebnis wieder in pandas umwandeln"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "78110c89",
+   "metadata": {},
+   "source": [
+    "## A. Eindimensionales Array zu Series"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "ee7a550b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "array = np.array([0.02, 0.01, -0.01, 0.03])\n",
+    "\n",
+    "serie = pd.Series(array, name=\"aktie_a\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "825ded2e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "serie = pd.Series(\n",
+    "    array,\n",
+    "    index=df.index,\n",
+    "    name=\"aktie_a\"\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "12e9314f",
+   "metadata": {},
+   "source": [
+    "## B. Zweidimensionales Array zu DataFrame"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "3280727d",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   aktie_a  aktie_b\n",
+      "0     0.02     0.01\n",
+      "1     0.01    -0.02\n",
+      "2    -0.01     0.02\n"
+     ]
+    }
+   ],
+   "source": [
+    "array = np.array([\n",
+    "[0.02, 0.01],\n",
+    "[0.01, -0.02],\n",
+    "[-0.01, 0.02]\n",
+    "])\n",
+    "\n",
+    "neuer_df = pd.DataFrame(\n",
+    "array,\n",
+    "columns=[\"aktie_a\", \"aktie_b\"]\n",
+    ")\n",
+    "print(neuer_df)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "405fc692",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   aktie_a  aktie_b\n",
+      "0     0.02     0.01\n",
+      "1     0.01    -0.02\n",
+      "2    -0.01     0.02\n"
+     ]
+    }
+   ],
+   "source": [
+    "neuer_df = pd.DataFrame(\n",
+    "    array,\n",
+    "    index=df.index[:3],\n",
+    "    # index aus dem Original-DataFrame übernehmen\n",
+    "    columns=[\"aktie_a\", \"aktie_b\"]\n",
+    ")\n",
+    "print(neuer_df)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "3fb4d9ee",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "spalten = [\"aktie_a\", \"aktie_b\", \"aktie_c\"]\n",
+    "\n",
+    "kovarianz_array = np.cov(\n",
+    "    df[spalten].to_numpy(),\n",
+    "    rowvar=False,\n",
+    "    ddof=1\n",
+    ")\n",
+    "\n",
+    "kovarianz_df = pd.DataFrame(\n",
+    "    kovarianz_array,\n",
+    "    index=spalten,\n",
+    "    columns=spalten\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "89a8379e",
+   "metadata": {},
+   "source": [
+    "# 5. Probleme und Herausforderungen"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "686db307",
+   "metadata": {},
+   "source": [
+    "## A. Fehlende Werte"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "819cf03e",
+   "metadata": {},
+   "source": [
+    "- Angenommen, eine Spalte enthält NaN:\n",
+    "\n",
+    "```Python\n",
+    "df = pd.DataFrame({\n",
+    "\"aktie_a\": [0.02, 0.01, np.nan, 0.03],\n",
+    "\"aktie_b\": [0.01, np.nan, 0.02, 0.04]\n",
+    "})\n",
+    "```\n",
+    "-  Diese SciPy-Berechnung kann dann ein ungültiges Ergebnis liefern:\n",
+    "\n",
+    "Python\n",
+    "stats.pearsonr(df[\"aktie_a\"], df[\"aktie_b\"])\n",
+    "\n",
+    "\n",
+    "- Falsch: Spalten getrennt bereinigen\n",
+    "```Python\n",
+    "a = df[\"aktie_a\"].dropna()\n",
+    "b = df[\"aktie_b\"].dropna()\n",
+    "```\n",
+    "- Das kann problematisch sein, weil danach Renditen aus unterschiedlichen Zeitpunkten miteinander verglichen werden."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "ea3c3bca",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Richtig: gemeinsame Zeilen auswählen\n",
+    "daten = df[[\"aktie_a\", \"aktie_b\"]].dropna()\n",
+    "\n",
+    "korrelation, p_wert = stats.pearsonr(\n",
+    "    daten[\"aktie_a\"].to_numpy(),\n",
+    "    daten[\"aktie_b\"].to_numpy()\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "41e11b40",
+   "metadata": {},
+   "source": [
+    "- Alternative mit nan_policy\n",
+    "\n",
+    "-   Einige SciPy-Funktionen unterstützen:\n",
+    "\n",
+    "    ```Python\n",
+    "    stats.ttest_ind(\n",
+    "    df[\"aktie_a\"],\n",
+    "    df[\"aktie_b\"],\n",
+    "    nan_policy=\"omit\"\n",
+    "    )\n",
+    "    ```\n",
+    "\n",
+    "- Aber nicht jede SciPy-Funktion besitzt denselben Umgang mit fehlenden Werten. Gemeinsames dropna() ist bei zusammengehörigen Finanzzeitreihen meist transparenter."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6aabb432",
+   "metadata": {},
+   "source": [
+    "## B. Unterschiedliche Längen"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0bfa8c41",
+   "metadata": {},
+   "source": [
+    "- Das geht nicht:\n",
+    "\n",
+    "    ```Python\n",
+    "    a = np.array([1, 2, 3])\n",
+    "    b = np.array([1, 2])\n",
+    "    stats.pearsonr(a, b)\n",
+    "    ```\n",
+    "- Beide Variablen müssen gleich viele zusammengehörige Beobachtungen haben."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "60ffa06c",
+   "metadata": {},
+   "source": [
+    "## C. Zweidimensional statt eindimensional"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b2aabe18",
+   "metadata": {},
+   "source": [
+    "- Das hier ist ein DataFrame:\n",
+    "\n",
+    "```Python\n",
+    "df[[\"aktie_a\"]]\n",
+    "```\n",
+    "- Es besitzt die Form:\n",
+    "\n",
+    "```Plain Text\n",
+    "(4, 1)\n",
+    "```\n",
+    "- Das hier ist eine Series:\n",
+    "\n",
+    "```Python\n",
+    "df[\"aktie_a\"]\n",
+    "```\n",
+    "- Sie besitzt die Form:\n",
+    "\n",
+    "```Plain Text\n",
+    "(4,)\n",
+    "```\n",
+    "- Viele statistische Funktionen erwarten für eine einzelne Variable (4,), also eindimensionale Daten.\n",
+    "\n",
+    "- Umwandlung:\n",
+    "\n",
+    "```Python\n",
+    "werte = df[[\"aktie_a\"]].to_numpy().ravel()\n",
+    "```\n",
+    "- Einfacher:\n",
+    "\n",
+    "```Python\n",
+    "werte = df[\"aktie_a\"].to_numpy()\n",
+    "```"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1da6d98f",
+   "metadata": {},
+   "source": [
+    "## D. Indexverlust"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9d93fe5f",
+   "metadata": {},
+   "source": [
+    "- Nach:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "6c46a379",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Array: [ 0.02  0.01 -0.01  0.03]\n"
+     ]
+    }
+   ],
+   "source": [
+    "array = df[\"aktie_a\"].to_numpy()\n",
+    "print(\"Array:\", array)\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "aa4f9857",
+   "metadata": {},
+   "source": [
+    "  - kennt das Array keine Datumsangaben und keine Zeilennamen mehr.\n",
+    "\n",
+    "-  Wenn du das Ergebnis zurückschreibst:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "1ecb4221",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   aktie_a  aktie_b  aktie_c  neues_ergebnis\n",
+      "0     0.02     0.01     0.05            0.02\n",
+      "1     0.01    -0.02    -0.02            0.01\n",
+      "2    -0.01     0.02     0.02           -0.01\n",
+      "3     0.03     0.04     0.04            0.03\n"
+     ]
+    }
+   ],
+   "source": [
+    "df[\"neues_ergebnis\"] = array\n",
+    "print(df)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1de25fbe",
+   "metadata": {},
+   "source": [
+    "- ordnet pandas es nur anhand der Position zu.\n",
+    "\n",
+    "- Sicherer bei einem separat berechneten Ergebnis:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "964c2488",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "0    0.02\n",
+      "1    0.01\n",
+      "2   -0.01\n",
+      "3    0.03\n",
+      "Name: neues_ergebnis, dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "ergebnis = pd.Series(\n",
+    "array,\n",
+    "index=df.index,\n",
+    "name=\"neues_ergebnis\"\n",
+    ")\n",
+    "print(ergebnis)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "numpy-pandas (3.12.x)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
